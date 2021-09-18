@@ -16,7 +16,7 @@ week = 3
 
 
 strat_bins = [.000, .600, .700, .800, .900, 1.000]
-strat_bin_values = [1, 1, 9, 10, 10]
+strat_bin_values = [1, 4, 9, 10, 10] # current best: [1, 4, 9, 10, 10]
 
 strat = 4
 
@@ -74,6 +74,7 @@ strat_mean, strat_median, strat_std, strat_rar = bootstrap(n=3, verbose=False)
 
 week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
 week_odds['strat'] = week_odds['strat'].astype('int')
+# print(week_odds[['Team', 'strat']])
 
 # print(f'Strategy Bins: {strat_bins}', file=open('output.txt', 'a'))
 # print(f'Strategy Point Values: {strat_bin_values}', file=open('output.txt', 'a'))
@@ -93,7 +94,7 @@ headers = ['Week','Strategy Bins','Strategy Point Values','Strategy Total Points
 output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,1)]
 
 # append_list_as_row('results.csv', headers)
-append_list_as_row('results.csv', output_values)
+# append_list_as_row('results.csv', output_values)
 
 # TODO 
 # test ndarrays to improve processing time - currently take 20 seconds for 10k sims
