@@ -1,22 +1,41 @@
+"""
+File: optimize_points.py
+Author: Matt Collins
+Created: 9/17/2021
+
+TODO:
+- Make this more modular where I can call it pass in inputs. Need to decide on function vs class
+- Could explore a dynamic approach to bucketize games. Ie. evenly distribute the odds across 5 buckets
+    - This would make it easier to grid search just the point values
+- Optimize strategy over an entire season
+    - In theory the strategy could be optimized over historical games, and then just applied to new weeks
+
+NOTE - target points per week: ~34
+"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 from utils import append_list_as_row
 
-# target points per week: ~34
+# set week
+week = 7
 
 # load data
 odds = pd.read_csv('odds.csv', usecols=['Line', 'win_percentage'])
-week = pd.read_csv('week3.csv')
-week_odds = week.merge(odds, how='left', on='Line')
+week_lines = pd.read_csv(f'./data/week{week}.csv')
+week_odds = week_lines.merge(odds, how='left', on='Line')
 
-# set week
-week = 3
+# print(week_odds.sort_values('win_percentage', ascending=False))
 
+strat_bins = [0.0, 0.6, 0.65, 0.7, 0.8, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
+strat_bin_values = [1, 3, 5, 7, 10] # [1, 4, 9, 10, 10]
 
-strat_bins = [.000, .600, .700, .800, .900, 1.000]
-strat_bin_values = [1, 4, 9, 10, 10] # current best: [1, 4, 9, 10, 10]
+# NOTE - uncomment to print out final strat
+week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
+week_odds['strat'] = week_odds['strat'].astype('int')
+print(week_odds[['Team', 'strat']])
+
 
 strat = 4
 
@@ -68,34 +87,17 @@ def bootstrap(n=30, verbose=False):
     return strat_mean, strat_median, strat_std, strat_rar 
 
 
-
-
 strat_mean, strat_median, strat_std, strat_rar = bootstrap(n=3, verbose=False)
 
-week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
-week_odds['strat'] = week_odds['strat'].astype('int')
-# print(week_odds[['Team', 'strat']])
 
-# print(f'Strategy Bins: {strat_bins}', file=open('output.txt', 'a'))
-# print(f'Strategy Point Values: {strat_bin_values}', file=open('output.txt', 'a'))
-# print(f'Strategy Total Points Wagered: {week_odds.strat.sum()}', file=open('output.txt', 'a'))
-# print(f'Strategy Times Each Point Wagered: {dict(week_odds.groupby("strat")["Team"].count())}', file=open('output.txt', 'a'))
+# headers = ['Week','Strategy Bins','Strategy Point Values','Strategy Total Points Wagered','Strategy Times Each Point Wagered','Strategy Mean','Strategy Median','Strategy Std','Strategy RAR']
+output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,2)]
 
-# print(f'Strategy Mean: {round(strat_mean,1)}', file=open('output.txt', 'a'))
-# print(f'Strategy Median: {round(strat_median,1)}', file=open('output.txt', 'a'))
-# print(f'Strategy Std: {round(strat_std,1)}', file=open('output.txt', 'a'))
-# print(f'Strategy RAR: {round(strat_rar,1)}', file=open('output.txt', 'a'))
 
-# print(f'\n', file=open('output.txt', 'a'))
-# print(f'-------------------------------------------------------------', file=open('output.txt', 'a'))
-# print(f'\n', file=open('output.txt', 'a'))
-
-headers = ['Week','Strategy Bins','Strategy Point Values','Strategy Total Points Wagered','Strategy Times Each Point Wagered','Strategy Mean','Strategy Median','Strategy Std','Strategy RAR']
-output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,1)]
-
+# NOTE - uncomment to write new trials to file
 # append_list_as_row('results.csv', headers)
-# append_list_as_row('results.csv', output_values)
 
-# TODO 
-# test ndarrays to improve processing time - currently take 20 seconds for 10k sims
-# update to write results to a table so it's easier to filter and sort
+append_list_as_row('results.csv', output_values)
+
+
+
