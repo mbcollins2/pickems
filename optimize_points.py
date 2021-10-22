@@ -7,6 +7,7 @@ TODO:
 - Make this more modular where I can call it pass in inputs. Need to decide on function vs class
 - Could explore a dynamic approach to bucketize games. Ie. evenly distribute the odds across 5 buckets
     - This would make it easier to grid search just the point values
+    - Could do clustering to create 5 clusters of win probs
 - Optimize strategy over an entire season
     - In theory the strategy could be optimized over historical games, and then just applied to new weeks
 
@@ -19,7 +20,7 @@ import time
 from utils import append_list_as_row
 
 # set week
-week = 7
+week = 8
 
 # load data
 odds = pd.read_csv('odds.csv', usecols=['Line', 'win_percentage'])
@@ -28,8 +29,8 @@ week_odds = week_lines.merge(odds, how='left', on='Line')
 
 # print(week_odds.sort_values('win_percentage', ascending=False))
 
-strat_bins = [0.0, 0.6, 0.65, 0.7, 0.8, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
-strat_bin_values = [1, 3, 5, 7, 10] # [1, 4, 9, 10, 10]
+strat_bins = [0.0, 0.55, 0.65, 0.7, 0.8, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
+strat_bin_values = [1, 3, 4, 7, 10] # [1, 4, 9, 10, 10]
 
 # NOTE - uncomment to print out final strat
 week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
