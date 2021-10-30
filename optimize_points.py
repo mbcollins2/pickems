@@ -10,6 +10,8 @@ TODO:
     - Could do clustering to create 5 clusters of win probs
 - Optimize strategy over an entire season
     - In theory the strategy could be optimized over historical games, and then just applied to new weeks
+- Clustering:
+    - Update to find the edge of the cluster, not the center
 
 NOTE - target points per week: ~34
 """
@@ -18,24 +20,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from utils import append_list_as_row
+from cluster import get_clusters
 
 # set week
-week = 8
+week = 9
 
 # load data
 odds = pd.read_csv('odds.csv', usecols=['Line', 'win_percentage'])
 week_lines = pd.read_csv(f'./data/week{week}.csv')
 week_odds = week_lines.merge(odds, how='left', on='Line')
 
-# print(week_odds.sort_values('win_percentage', ascending=False))
+print(week_odds.sort_values('win_percentage', ascending=False))
 
-strat_bins = [0.0, 0.55, 0.65, 0.7, 0.8, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
+# strat_bins = [0.0, 0.515, 0.615, 0.7, 0.76, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
+strat_bins = get_clusters(week_odds, 5)
+print(strat_bins)
+
 strat_bin_values = [1, 3, 4, 7, 10] # [1, 4, 9, 10, 10]
 
 # NOTE - uncomment to print out final strat
-week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
-week_odds['strat'] = week_odds['strat'].astype('int')
-print(week_odds[['Team', 'strat']])
+# week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
+# week_odds['strat'] = week_odds['strat'].astype('int')
+# print(week_odds[['Team', 'strat']])
 
 
 strat = 4
