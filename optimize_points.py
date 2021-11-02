@@ -4,14 +4,14 @@ Author: Matt Collins
 Created: 9/17/2021
 
 TODO:
-- Make this more modular where I can call it pass in inputs. Need to decide on function vs class
-- Could explore a dynamic approach to bucketize games. Ie. evenly distribute the odds across 5 buckets
-    - This would make it easier to grid search just the point values
-    - Could do clustering to create 5 clusters of win probs
-- Optimize strategy over an entire season
+- Update optimize_points function to use ndarrays instead of pandas and apply
+- Make this more modular where I can call it pass in inputs
+- Optimize strategy over an entire season?
     - In theory the strategy could be optimized over historical games, and then just applied to new weeks
-- Clustering:
-    - Update to find the edge of the cluster, not the center
+    - Will set up an optimizer, then can optimize over single week or season
+- Set up optimization
+    - Need to make optimize_points a function that returns the primary value to optimize (probably as a negative)
+    - Then set up optimization as a separate script called main where you can run everything from
 
 NOTE - target points per week: ~34
 """
@@ -30,18 +30,21 @@ odds = pd.read_csv('odds.csv', usecols=['Line', 'win_percentage'])
 week_lines = pd.read_csv(f'./data/week{week}.csv')
 week_odds = week_lines.merge(odds, how='left', on='Line')
 
-print(week_odds.sort_values('win_percentage', ascending=False))
+# print(week_odds.sort_values('win_percentage', ascending=False))
 
 # strat_bins = [0.0, 0.515, 0.615, 0.7, 0.76, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
 strat_bins = get_clusters(week_odds, 5)
-print(strat_bins)
 
-strat_bin_values = [1, 3, 4, 7, 10] # [1, 4, 9, 10, 10]
+strat_bin_values = [1, 3, 4, 8, 10] # [1, 4, 9, 10, 10]
+
+# set up optimization
+# bounds = tuple([(1,10) for x in strat_bin_values])
+
 
 # NOTE - uncomment to print out final strat
-# week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
-# week_odds['strat'] = week_odds['strat'].astype('int')
-# print(week_odds[['Team', 'strat']])
+week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
+week_odds['strat'] = week_odds['strat'].astype('int')
+print(week_odds[['Team', 'strat']])
 
 
 strat = 4
