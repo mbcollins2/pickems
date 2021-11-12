@@ -19,18 +19,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from utils import append_list_as_row
+from utils import append_list_as_row, read_data
 from cluster import get_clusters
 
-# set week
-week = 10
+# read in data
+week_odds = read_data(week=11)
 
-# load data
-odds = pd.read_csv('odds.csv', usecols=['Line', 'win_percentage'])
-week_lines = pd.read_csv(f'./data/week{week}.csv')
-week_odds = week_lines.merge(odds, how='left', on='Line')
-
-# print(week_odds.sort_values('win_percentage', ascending=False))
+print(week_odds.sort_values('win_percentage', ascending=False))
 
 # strat_bins = [0.0, 0.515, 0.615, 0.7, 0.76, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
 strat_bins = get_clusters(week_odds, 5)
