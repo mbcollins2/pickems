@@ -1,5 +1,6 @@
 import time
 import numpy as np
+from numpy.lib import median
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -26,10 +27,15 @@ class pickSimulator(object):
         if verbose: print(f'Run time: {time.time()-start}')
 
         if plot:
-            # plt.hist(points)
-            sns.histplot(data=points, stat='count')
-            plt.title(f'{n} Simulations')
-            plt.savefig(f'points_{n}_simulations.png')
+            med = round(np.median(points))
+            sts = round(len([x for x in points if x < -40])/len(points)*100,1)
+            sns.histplot(data=points, binwidth=10)
+            plt.axvline(x=med, label= f'Median: {round(med)}', color='grey', linestyle='--')
+            plt.axvspan(np.min(points), -40, color='r', alpha=0.1)
+            plt.suptitle(f'{n} Simulations', weight='bold')
+            plt.title(f'Median: {med}   Sucks to Suck: {sts}%')
+            plt.legend()
+            plt.savefig(f'artifacts/points_{n}_simulations.png', dpi=300)
 
         return points
 
