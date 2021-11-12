@@ -5,7 +5,7 @@ import pandas as pd
 week = 11
 
 
-week_lines = pd.read_csv(f'./data/week{week}.csv')
+# week_lines = pd.read_csv(f'./data/week{week}.csv')
 # print(week_lines)
 
 # print(week_lines.iloc[0,1])
@@ -24,3 +24,5 @@ week_lines = pd.read_csv(f'./data/week{week}.csv')
 
 # strat_bins = week_odds.groupby('cluster')['win_percentage'].max() + 0.001
 # print(sorted(sorted(strat_bins.values)[:-1] + [0.0,1.0]))
+
+

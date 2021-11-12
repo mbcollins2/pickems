@@ -22,78 +22,83 @@ import time
 from utils import append_list_as_row, read_data
 from cluster import get_clusters
 
+week = 11
+
 # read in data
-week_odds = read_data(week=11)
+week_odds = read_data(week=week, verbose=False)
 
-print(week_odds.sort_values('win_percentage', ascending=False))
-
-# strat_bins = [0.0, 0.515, 0.615, 0.7, 0.76, 1.0] # [0.0, 0.6, 0.7, 0.8, 0.9, 1.0]
 strat_bins = get_clusters(week_odds, 5)
-# print(strat_bins)
-
-strat_bin_values = [1, 3, 5, 8, 10] # [1, 4, 9, 10, 10]
+strat_bin_values = [2, 4, 6, 8, 10] # [1, 4, 9, 10, 10]
 
 # set up optimization
 # bounds = tuple([(1,10) for x in strat_bin_values])
 
 
 # NOTE - uncomment to print out final strat
-week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
-week_odds['strat'] = week_odds['strat'].astype('int')
-print(week_odds[['Team', 'strat']])
+# week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
+# week_odds['strat'] = week_odds['strat'].astype('int')
+# print(week_odds[['Team', 'strat']])
 
 
-# strat = 4
-
-# def sim(n=10000, strat=5, strat_bins=strat_bins, strat_bin_values=strat_bin_values, verbose=False, plot=False):
-#     points = []
-#     start = time.time()
-#     for i in range(10000):
-#         week_odds['rand'] = np.random.rand(week_odds.shape[0])
-#         week_odds['win'] = week_odds.apply(lambda x: 1 if x['rand'] <= x['win_percentage'] else -1, axis=1)
-#         week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
-#         week_odds['strat'] = week_odds['strat'].astype('int')
-#         # week_odds['strat'] = strat
-#         week_odds['points'] = week_odds['win'] * week_odds['strat']
-
-#         negative_points = week_odds.loc[week_odds.points<0]['points'].sum() - -40
-#         penalty = negative_points*2 if negative_points<0 else 0
-#         pts = week_odds['points'].sum() + penalty
-#         points.append(pts)
-
-#     if verbose: print(f'Run time: {time.time()-start}')
-
-#     if plot:
-#         plt.hist(points)
-#         plt.savefig('points_baseline.png')
-
-#     return points
 
 
-# def bootstrap(n=30, verbose=False):
-#     means = []
-#     stds = []
-#     medians = []
-#     rars = []
-#     start = time.time()
-#     for i in range(n):
-#         points = sim(n=10000, strat=strat, verbose=False)
-#         means.append(np.mean(points))
-#         medians.append(np.median(points))
-#         stds.append(np.std(points))
-#         rars.append(np.mean(points)/np.std(points))
+def sim(n=10000, strat_bins=strat_bins, strat_bin_values=strat_bin_values, verbose=False, plot=False):
+    points = []
+    start = time.time()
+    week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
+    week_odds['strat'] = week_odds['strat'].astype('int')
+    for i in range(10000):
+        week_odds['rand'] = np.random.rand(week_odds.shape[0])
+        week_odds['win'] = week_odds.apply(lambda x: 1 if x['rand'] <= x['win_percentage'] else -1, axis=1)
+        week_odds['points'] = week_odds['win'] * week_odds['strat']
+
+        negative_points = week_odds.loc[week_odds.points<0]['points'].sum() - -40
+        penalty = negative_points*2 if negative_points<0 else 0
+        pts = week_odds['points'].sum() + penalty
+        
+        # df = week_odds.values
+        # df = np.column_stack((df, np.random.rand(df.shape[0])))
+        # df = np.column_stack((df, [1 if x==True else -1 for x in df[:,4] <= df[:,1]]))
+        # df = np.column_stack((df, df[:,5] * df[:,3]))
+        # negative_points = sum([x for x in df[:,6] if x < 0]) - -40
+        # penalty = negative_points*2 if negative_points<0 else 0
+        # pts = np.sum(df[:,6]) + penalty
+
+        points.append(pts)
+
+    if verbose: print(f'Run time: {time.time()-start}')
+
+    if plot:
+        plt.hist(points)
+        plt.savefig('points_baseline.png')
+
+    return points
+
+
+def bootstrap(n=30, verbose=False):
+    means = []
+    stds = []
+    medians = []
+    rars = []
+    start = time.time()
+    for i in range(n):
+        points = sim(n=10000, verbose=False)
+        means.append(np.mean(points))
+        medians.append(np.median(points))
+        stds.append(np.std(points))
+        rars.append(np.mean(points)/np.std(points))
     
-#     if verbose: print(f'Run time: {time.time()-start}')
+    if verbose: print(f'Run time: {time.time()-start}')
 
-#     strat_mean = np.mean(means)
-#     strat_median = np.mean(medians)
-#     strat_std = np.mean(stds)
-#     strat_rar = np.mean(rars)
+    strat_mean = np.mean(means)
+    strat_median = np.mean(medians)
+    strat_std = np.mean(stds)
+    strat_rar = np.mean(rars)
 
-#     return strat_mean, strat_median, strat_std, strat_rar 
+    return strat_mean, strat_median, strat_std, strat_rar 
 
 
-# strat_mean, strat_median, strat_std, strat_rar = bootstrap(n=3, verbose=False)
+strat_mean, strat_median, strat_std, strat_rar = bootstrap(n=5, verbose=True)
 
 
 # # NOTE - headers
@@ -101,8 +106,8 @@ print(week_odds[['Team', 'strat']])
 # # append_list_as_row('results.csv', headers)
 
 
-# output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,2)]
-# append_list_as_row('results.csv', output_values)
+output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,2)]
+append_list_as_row('results.csv', output_values)
 
 
 
