@@ -4,7 +4,6 @@ Author: Matt Collins
 Created: 9/17/2021
 
 TODO:
-- Update optimize_points function to use ndarrays instead of pandas and apply
 - Make this more modular where I can call it pass in inputs
 - Optimize strategy over an entire season?
     - In theory the strategy could be optimized over historical games, and then just applied to new weeks
@@ -48,22 +47,13 @@ def sim(n=10000, strat_bins=strat_bins, strat_bin_values=strat_bin_values, verbo
     week_odds['strat'] = pd.cut(week_odds['win_percentage'], strat_bins, labels=strat_bin_values, ordered=False)
     week_odds['strat'] = week_odds['strat'].astype('int')
     for i in range(10000):
-        week_odds['rand'] = np.random.rand(week_odds.shape[0])
-        week_odds['win'] = week_odds.apply(lambda x: 1 if x['rand'] <= x['win_percentage'] else -1, axis=1)
-        week_odds['points'] = week_odds['win'] * week_odds['strat']
-
-        negative_points = week_odds.loc[week_odds.points<0]['points'].sum() - -40
+        df = week_odds.values
+        df = np.column_stack((df, np.random.rand(df.shape[0])))
+        df = np.column_stack((df, [1 if x==True else -1 for x in df[:,4] <= df[:,1]]))
+        df = np.column_stack((df, df[:,5] * df[:,3]))
+        negative_points = sum([x for x in df[:,6] if x < 0]) - -40
         penalty = negative_points*2 if negative_points<0 else 0
-        pts = week_odds['points'].sum() + penalty
-        
-        # df = week_odds.values
-        # df = np.column_stack((df, np.random.rand(df.shape[0])))
-        # df = np.column_stack((df, [1 if x==True else -1 for x in df[:,4] <= df[:,1]]))
-        # df = np.column_stack((df, df[:,5] * df[:,3]))
-        # negative_points = sum([x for x in df[:,6] if x < 0]) - -40
-        # penalty = negative_points*2 if negative_points<0 else 0
-        # pts = np.sum(df[:,6]) + penalty
-
+        pts = np.sum(df[:,6]) + penalty
         points.append(pts)
 
     if verbose: print(f'Run time: {time.time()-start}')
