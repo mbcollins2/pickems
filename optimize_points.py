@@ -18,8 +18,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from utils import append_list_as_row, read_data
-from cluster import get_clusters
+from src.utils import append_list_as_row, read_data
+from src.cluster import get_clusters
 
 week = 11
 
@@ -27,7 +27,7 @@ week = 11
 week_odds = read_data(week=week, verbose=False)
 
 strat_bins = get_clusters(week_odds, 5)
-strat_bin_values = [2, 4, 6, 8, 10] # [1, 4, 9, 10, 10]
+strat_bin_values = [2, 2, 9, 10, 10] # [1, 4, 9, 10, 10]
 
 # set up optimization
 # bounds = tuple([(1,10) for x in strat_bin_values])
@@ -65,7 +65,7 @@ def sim(n=10000, strat_bins=strat_bins, strat_bin_values=strat_bin_values, verbo
     return points
 
 
-def bootstrap(n=30, verbose=False):
+def trails(n=30, verbose=False):
     means = []
     stds = []
     medians = []
@@ -88,12 +88,12 @@ def bootstrap(n=30, verbose=False):
     return strat_mean, strat_median, strat_std, strat_rar 
 
 
-strat_mean, strat_median, strat_std, strat_rar = bootstrap(n=5, verbose=True)
+strat_mean, strat_median, strat_std, strat_rar = trails(n=5, verbose=True)
 
 
-# # NOTE - headers
-# # headers = ['Week','Strategy Bins','Strategy Point Values','Strategy Total Points Wagered','Strategy Times Each Point Wagered','Strategy Mean','Strategy Median','Strategy Std','Strategy RAR']
-# # append_list_as_row('results.csv', headers)
+# NOTE - headers
+# headers = ['Week','Strategy Bins','Strategy Point Values','Strategy Total Points Wagered','Strategy Times Each Point Wagered','Strategy Mean','Strategy Median','Strategy Std','Strategy RAR']
+# append_list_as_row('results.csv', headers)
 
 
 output_values = [week,strat_bins,strat_bin_values,week_odds.strat.sum(),dict(week_odds.groupby("strat")["Team"].count()),round(strat_mean,1),round(strat_median,1),round(strat_std,1),round(strat_rar,2)]
